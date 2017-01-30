@@ -649,7 +649,9 @@ fn %interactive-loop {
 		} {
 			forever {
 				if {!~ $#fn-%prompt 0} {
-					%prompt
+          catch @ _ _ e {
+            echo 'caught error in %prompt: '^$e
+          } {%prompt}
 				}
 				let (code = <={%parse $prompt}) {
 					if {!~ $#code 0} {
