@@ -15,6 +15,7 @@ typedef enum { NW, RW, KW } State;	/* "nonword", "realword", "keyword" */
 static State w = NW;
 static Boolean newline = FALSE;
 static Boolean goterror = FALSE;
+static Boolean skipequals = FALSE;
 static size_t bufsize = 0;
 static char *tokenbuf = NULL;
 
@@ -176,7 +177,7 @@ top:	while ((c = GETC()) == ' ' || c == '\t')
 			buf[i++] = c;
 			if (i >= bufsize)
 				buf = tokenbuf = erealloc(buf, bufsize *= 2);
-		} while ((c = GETC()) != EOF && !meta[(unsigned char) c]);
+		} while ((c = GETC()) != EOF && (!meta[(unsigned char) c] || (skipequals && c == '=')));
 		UNGETC(c);
 		buf[i] = '\0';
 		w = KW;
@@ -316,6 +317,8 @@ top:	while ((c = GETC()) == ' ' || c == '\t')
 			c = SUB;
 		/* FALLTHROUGH */
 	case ';':
+        skipequals = FALSE;
+        /* FALLTHROUGH */
 	case '^':
 	case ')':
 	case '=':
