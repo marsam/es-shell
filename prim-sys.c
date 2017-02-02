@@ -55,6 +55,8 @@ PRIM(background) {
 	return mklist(mkstr(str("%d", pid)), NULL);
 }
 
+/*
+ * Assertion: $&fork is useless.
 PRIM(fork) {
 	int pid, status;
 	pid = efork(TRUE, FALSE);
@@ -65,6 +67,7 @@ PRIM(fork) {
 	printstatus(0, status);
 	return mklist(mkstr(mkstatus(status)), NULL);
 }
+*/
 
 PRIM(run) {
 	char *file;
@@ -444,7 +447,7 @@ extern Dict *initprims_sys(Dict *primdict) {
 	X(background);
 	X(umask);
 	X(cd);
-	X(fork);
+	// X(fork);
 	X(run);
 	X(setsignals);
 #if BSD_LIMITS

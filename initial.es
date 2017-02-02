@@ -70,7 +70,6 @@ fn-catch	= $&catch
 fn-echo		= $&echo
 fn-exec		= $&exec
 fn-forever	= $&forever
-fn-fork		= $&fork
 fn-if		= $&if
 fn-newpgrp	= $&newpgrp
 fn-result	= $&result
@@ -129,6 +128,12 @@ fn-unwind-protect = $&noreturn @ body cleanup {
 		}
 	}
 }
+
+# $&fork has been a primitive: here, we reimplement the function in terms of other
+# primitives.  Presume this will not break anything.
+
+fn-fork = @ cmd {$&wait <={$&background {$cmd}}}
+
 
 #	These builtins are not provided on all systems, so we check
 #	if the accompanying primitives are defined and, if so, define
