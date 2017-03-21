@@ -22,11 +22,20 @@ static char *tokenbuf = NULL;
 #define	InsertFreeCaret()	STMT(if (w != NW) { w = NW; UNGETC(c); return '^'; })
 
 
+extern void setskip(void) {
+    skipequals = TRUE;
+}
+
+extern void unsetskip(void) {
+    skipequals = FALSE;
+}
+
 /*
  *	Special characters (i.e., "non-word") in es:
  *		\t \n # ; & | ^ $ = ` ' ! { } ( ) < > \
  */
 
+/* Non-word in default context */
 const char nw[] = {
 	1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0,		/*   0 -  15 */
 	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,		/*  16 -  32 */
@@ -46,6 +55,8 @@ const char nw[] = {
 	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,		/* 240 - 255 */
 };
 
+/* "dollar non-word", i.e., invalid variable characters */
+/* N.B. valid chars are % * - [0-9] [A-Z] _ [a-z]       */
 const char dnw[] = {
 	1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,		/*   0 -  15 */
 	1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,		/*  16 -  32 */
@@ -165,10 +176,14 @@ extern int yylex(void) {
 		print_prompt2();
 		newline = FALSE;
 	}
-top:	while ((c = GETC()) == ' ' || c == '\t')
+
+top:
+    while ((c = GETC()) == ' ' || c == '\t')
 		w = NW;
+
 	if (c == EOF)
 		return ENDFILE;
+
 	if (!meta[(unsigned char) c]) {	/* it's a word or keyword. */
 		InsertFreeCaret();
 		w = RW;
@@ -199,11 +214,13 @@ top:	while ((c = GETC()) == ' ' || c == '\t')
 		y->str = gcdup(buf);
 		return WORD;
 	}
+
 	if (c == '`' || c == '!' || c == '$' || c == '\'') {
 		InsertFreeCaret();
 		if (c == '!')
 			w = KW;
-	}
+    }
+
 	switch (c) {
 	case '!':
 		return '!';
@@ -317,7 +334,6 @@ top:	while ((c = GETC()) == ' ' || c == '\t')
 			c = SUB;
 		/* FALLTHROUGH */
 	case ';':
-        skipequals = FALSE;
         /* FALLTHROUGH */
 	case '^':
 	case ')':
