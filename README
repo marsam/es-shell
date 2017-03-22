@@ -1,3 +1,31 @@
+Preface
+-------
+
+This is a personal extension of es.  There are a few ways this differs
+from the 'canonical' es:
+
+ - (Many cases of) embedded '=' in arguments result in no syntax error.
+   This is ongoing; the optimal behavior is a bit sophisticated.
+
+ - $&background is gone, renamed to $&fork; the old definition of 
+   $&fork has been removed; same with %background and %fork.  The old
+   function 'fork' has been renamed 'subshell'.  The rationale here
+   is to have variants on 'fork' for non-blocking semantics, and
+   'subshell' for blocking semantics.
+
+Still to do:
+
+ - Change the precedence of '$$a(1)' to be dissimilar from '$($a(1))'
+
+ - Programmable tab completion (iff readline is linked in).
+
+ - More robust '=' parsing.
+
+ - A proper unit- and regression-testing suite.
+
+README
+------
+
 Es is an extensible shell.  The language was derived from the Plan 9
 shell, rc, and was influenced by functional programming languages,
 such as Scheme, and the Tcl embeddable programming language.  This
