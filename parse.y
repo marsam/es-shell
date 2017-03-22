@@ -38,7 +38,7 @@
 es	: line end		{ parsetree = $1; YYACCEPT; }
 	| error end		{ yyerrok; parsetree = NULL; YYABORT; }
 
-end	: NL			{ if (!readheredocs(FALSE)) YYABORT; }
+end	: NL			{ if (!readheredocs(FALSE)) YYABORT; unsetskip(); }
 	| ENDFILE		{ if (!readheredocs(TRUE)) YYABORT; }
 
 line	: cmd			{ $$ = $1; }

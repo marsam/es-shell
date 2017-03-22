@@ -328,6 +328,7 @@ top:
 	case '\n':
 		input->lineno++;
 		newline = TRUE;
+        unsetskip();
 		w = NW;
 		return NL;
 	case '(':
