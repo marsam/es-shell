@@ -196,6 +196,7 @@ top:
 		UNGETC(c);
 		buf[i] = '\0';
 		w = KW;
+        setskip();
 		if (buf[1] == '\0') {
 			int k = *buf;
 			if (k == '@' || k == '~')
@@ -334,15 +335,22 @@ top:
 			c = SUB;
 		/* FALLTHROUGH */
 	case ';':
+        unsetskip();
         /* FALLTHROUGH */
 	case '^':
 	case ')':
 	case '=':
-	case '{': case '}':
+        w = NW;
+        return c;
+	case '{':
+        unsetskip();
+        /* FALLTHROUGH */
+    case '}':
 		w = NW;
 		return c;
 	case '&':
 		w = NW;
+        unsetskip();
 		c = GETC();
 		if (c == '&')
 			return ANDAND;
@@ -352,6 +360,7 @@ top:
 	case '|': {
 		int p[2];
 		w = NW;
+        unsetskip();
 		c = GETC();
 		if (c == '|')
 			return OROR;
