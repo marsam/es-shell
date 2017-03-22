@@ -121,8 +121,8 @@ nlwords :				{ $$ = NULL; }
 	| nlwords word			{ $$ = treeconsend($1, $2); }
 	| nlwords NL			{ $$ = $1; }
 
-nl	:
-	| nl NL
+nl	:                               { unsetskip(); }
+	| nl NL                         { unsetskip(); }
 
 caret 	:
 	| '^'

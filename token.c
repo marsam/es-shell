@@ -333,20 +333,20 @@ top:
 	case '(':
 		if (w == RW)	/* not keywords, so let & friends work */
 			c = SUB;
-		/* FALLTHROUGH */
+        /* nb: IF we change parse.y such that 'nl' no longer implies 'unsetskip()',
+         * or if 'nl' no longer necessarily comes between 'binder' and '(', we need
+         * to potentially call 'unsetskip()' here, if binder is the previous nonterminal. */
+        w = NW;
+		return c;
 	case ';':
+    case '{':
         unsetskip();
         /* FALLTHROUGH */
+    case ')':
+    case '}':
 	case '^':
-	case ')':
 	case '=':
         w = NW;
-        return c;
-	case '{':
-        unsetskip();
-        /* FALLTHROUGH */
-    case '}':
-		w = NW;
 		return c;
 	case '&':
 		w = NW;
