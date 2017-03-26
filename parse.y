@@ -16,7 +16,7 @@
 %left	ANDAND OROR NL
 %left	'!'
 %left	PIPE
-%right	'$' 
+%right	'$'
 %left	SUB
 
 %union {
@@ -53,6 +53,14 @@ cmdsa	: cmd ';'		{ $$ = $1; }
 cmdsan	: cmdsa			{ $$ = $1; }
 	| cmd NL		{ $$ = $1; if (!readheredocs(FALSE)) YYABORT; }
 
+/* re: parsing, there are basically four kinds of 'cmd': 'simple', assignment, extraction, and
+ * 'self-referential'.
+ *
+ *  - 'simple':           first (word|redir)*
+ *  - 'assign':           first '=' (word)*
+ *  - 'extraction':       '~(~?)' (word)+
+ *  - 'self-referential': rules where 'cmd' shows up on the RHS
+ */
 cmd	:		%prec LET		{ $$ = NULL; }
 	| simple				{ $$ = redirect($1); if ($$ == &errornode) YYABORT; }
 	| redir cmd	%prec '!'		{ $$ = redirect(mk(nRedir, $1, $2)); if ($$ == &errornode) YYABORT; }
@@ -86,12 +94,18 @@ assign	: caret '=' caret words		{ $$ = $4; }
 fn	: FN word params '{' body '}'	{ $$ = fnassign($2, mklambda($3, $5)); }
 	| FN word			{ $$ = fnassign($2, NULL); }
 
+/*
+ * 'first' is 'comword(^sword)*'.  Specifically, like 'word'
+ *  but cannot start with a keyword.
+ */
 first	: comword			{ $$ = $1; }
 	| first '^' sword		{ $$ = mk(nConcat, $1, $3); }
 
+/* 'sword' is a single word; i.e., a unit which can be combined with '^'. */
 sword	: comword			{ $$ = $1; }
 	| keyword			{ $$ = mk(nWord, $1); }
 
+/* 'word' is 'sword(^sword)*'.  A (one-or-more) list of carat-separated 'sword's. */
 word	: sword				{ $$ = $1; }
 	| word '^' sword		{ $$ = mk(nConcat, $1, $3); }
 
@@ -108,22 +122,28 @@ comword	: param				{ $$ = $1; }
 	| '`' sword			{ $$ = backquote(mk(nVar, mk(nWord, "ifs")), $2); }
 	| BACKBACK word	sword		{ $$ = backquote($2, $3); }
 
+/* a 'param' is essentially a 'unit non-special word'. */
 param	: WORD				{ $$ = mk(nWord, $1); }
 	| QWORD				{ $$ = mk(nQword, $1); }
 
+/* a zero-or-more space-separated list of 'param's. */
 params	:				{ $$ = NULL; }
 	| params param			{ $$ = treeconsend($1, $2); }
 
+/* 'words' is a zero-or-more space-separated list of 'word's. */
 words	:				{ $$ = NULL; }
 	| words word			{ $$ = treeconsend($1, $2); }
 
+/* a zero-or-more space-or-\n-separated list of 'word's. */
 nlwords :				{ $$ = NULL; }
 	| nlwords word			{ $$ = treeconsend($1, $2); }
 	| nlwords NL			{ $$ = $1; }
 
+/* zero-or-more newlines. */
 nl	:                               { unsetskip(); }
 	| nl NL                         { unsetskip(); }
 
+/* zero-or-one '^' characters. */
 caret 	:
 	| '^'
 
