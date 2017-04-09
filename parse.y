@@ -38,8 +38,8 @@
 es	: line end		{ parsetree = $1; YYACCEPT; }
 	| error end		{ yyerrok; parsetree = NULL; YYABORT; }
 
-end	: NL			{ if (!readheredocs(FALSE)) YYABORT; unsetskip(); }
-	| ENDFILE		{ if (!readheredocs(TRUE)) YYABORT; }
+end	: NL			{ unsetskip(); if (!readheredocs(FALSE)) YYABORT; }
+	| ENDFILE		{ unsetskip(); if (!readheredocs(TRUE)) YYABORT; }
 
 line	: cmd			{ $$ = $1; }
 	| cmdsa line		{ $$ = mkseq("%seq", $1, $2); }

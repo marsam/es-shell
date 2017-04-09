@@ -672,11 +672,11 @@ fn %interactive-loop {
 #	function.  (For %eval-noprint, note that an empty list prepended
 #	to a command just causes the command to be executed.)
 
-fn %eval-noprint				# <default>
-fn %eval-print		{ echo $* >[1=2]; $* }	# -x
-fn %noeval-noprint	{ }			# -n
-fn %noeval-print	{ echo $* >[1=2] }	# -n -x
-fn-%exit-on-false = $&exitonfalse		# -e
+fn %eval-noprint				                    # <default>
+fn %eval-print		  { echo $* >[1=2]; $* }	# -x
+fn %noeval-noprint	{ }			                # -n
+fn %noeval-print	  { echo $* >[1=2] }	    # -n -x
+fn-%exit-on-false = $&exitonfalse		        # -e
 
 
 #
