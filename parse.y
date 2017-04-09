@@ -16,8 +16,9 @@
 %left	ANDAND OROR NL
 %left	'!'
 %left	PIPE
-%right	'$'
+%right  VWORD
 %left	SUB
+%right	'$'
 
 %union {
 	Tree *tree;
@@ -28,7 +29,7 @@
 %type <str>	WORD QWORD keyword
 %type <tree>	REDIR PIPE DUP
 		body cmd cmdsa cmdsan comword first fn line word param assign
-		binding bindings params nlwords words simple redir sword
+		binding bindings params nlwords words simple redir sword vword vsword
 %type <kind>	binder
 
 %start es
@@ -109,12 +110,29 @@ sword	: comword			{ $$ = $1; }
 word	: sword				{ $$ = $1; }
 	| word '^' sword		{ $$ = mk(nConcat, $1, $3); }
 
+/* a 'vsword' is an sword inside of a variable. */
+vsword  : vword				{ $$ = $1; }
+        | keyword			{ $$ = mk(nWord, $1); }
+
+/* a 'vword' is a comword that can't contain subscripting */
+vword	: param				{ $$ = $1; }
+	| '(' nlwords ')'		{ $$ = $2; }
+	| '{' body '}'			{ $$ = thunkify($2); }
+	| '@' params '{' body '}'	{ $$ = mklambda($2, $4); }
+	| '$' vsword                    { $$ = mk(nVar, $2); }
+	| CALL sword			{ $$ = mk(nCall, $2); }
+	| COUNT sword			{ $$ = mk(nCall, prefix("%count", treecons(mk(nVar, $2), NULL))); }
+	| FLAT sword			{ $$ = flatten(mk(nVar, $2), " "); }
+	| PRIM WORD			{ $$ = mk(nPrim, $2); }
+	| '`' vsword			{ $$ = backquote(mk(nVar, mk(nWord, "ifs")), $2); }
+	| BACKBACK word	sword		{ $$ = backquote($2, $3); }
+
 comword	: param				{ $$ = $1; }
 	| '(' nlwords ')'		{ $$ = $2; }
 	| '{' body '}'			{ $$ = thunkify($2); }
 	| '@' params '{' body '}'	{ $$ = mklambda($2, $4); }
-	| '$' sword			{ $$ = mk(nVar, $2); }
-	| '$' sword SUB words ')'	{ $$ = mk(nVarsub, $2, $4); }
+	| '$' vsword     %prec VWORD	{ $$ = mk(nVar, $2); }
+	| '$' vsword SUB words ')'	{ $$ = mk(nVarsub, $2, $4); }
 	| CALL sword			{ $$ = mk(nCall, $2); }
 	| COUNT sword			{ $$ = mk(nCall, prefix("%count", treecons(mk(nVar, $2), NULL))); }
 	| FLAT sword			{ $$ = flatten(mk(nVar, $2), " "); }
