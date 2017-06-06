@@ -202,6 +202,7 @@ top:
 			if (k == '@' || k == '~')
 				return k;
 		} else if (*buf == 'f') {
+			if (streq(buf + 1, "n"))	return FN;
 			if (streq(buf + 1, "or"))	return FOR;
 		} else if (*buf == 'l') {
 			if (streq(buf + 1, "ocal"))	return LOCAL;

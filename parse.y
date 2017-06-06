@@ -8,7 +8,7 @@
 %}
 
 %token	WORD QWORD
-%token	LOCAL LET FOR CLOSURE
+%token	LOCAL LET FOR CLOSURE FN
 %token	ANDAND BACKBACK EXTRACT CALL COUNT DUP FLAT OROR PRIM REDIR SUB
 %token	NL ENDFILE ERROR
 
@@ -28,7 +28,7 @@
 
 %type <str>	WORD QWORD keyword
 %type <tree>	REDIR PIPE DUP
-		body cmd cmdsa cmdsan comword first line word param assign
+		body cmd cmdsa cmdsan comword first fn line word param assign
 		binding bindings params nlwords words simple redir sword vword vsword
 %type <kind>	binder
 
@@ -66,6 +66,7 @@ cmd	:		%prec LET		{ $$ = NULL; }
 	| simple				{ $$ = redirect($1); if ($$ == &errornode) YYABORT; }
 	| redir cmd	%prec '!'		{ $$ = redirect(mk(nRedir, $1, $2)); if ($$ == &errornode) YYABORT; }
 	| first assign				{ $$ = mk(nAssign, $1, $2); }
+	| fn					{ $$ = $1; }
 	| binder nl '(' bindings ')' nl cmd	{ $$ = mk($1, $4, $7); }
 	| cmd ANDAND nl cmd			{ $$ = mkseq("%and", $1, $4); }
 	| cmd OROR nl cmd			{ $$ = mkseq("%or", $1, $4); }
@@ -86,9 +87,13 @@ bindings: binding			{ $$ = treecons2($1, NULL); }
 	| bindings NL binding		{ $$ = treeconsend2($1, $3); }
 
 binding	:				{ $$ = NULL; }
+	| fn				{ $$ = $1; }
 	| word assign			{ $$ = mk(nAssign, $1, $2); }
 
 assign	: caret '=' caret words		{ $$ = $4; }
+
+fn	: FN word params '{' body '}'	{ $$ = fnassign($2, mklambda($3, $5)); }
+	| FN word			{ $$ = fnassign($2, NULL); }
 
 /*
  * 'first' is 'comword(^sword)*'.  Specifically, like 'word'
@@ -171,6 +176,6 @@ keyword	: '!'		{ $$ = "!"; }
         | LOCAL 	{ $$ = "local"; }
 	| LET		{ $$ = "let"; }
 	| FOR		{ $$ = "for"; }
+	| FN		{ $$ = "fn"; }
 	| CLOSURE	{ $$ = "%closure"; }
 
-/* vim: set ts=8: */

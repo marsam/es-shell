@@ -87,6 +87,11 @@ extern Tree *backquote(Tree *ifs, Tree *body) {
 				  treecons(body, NULL))));
 }
 
+/* fnassign -- translate a function definition into an assignment */
+extern Tree *fnassign(Tree *name, Tree *defn) {
+	return mk(nAssign, mk(nConcat, mk(nWord, "fn-"), name), defn);
+}
+
 /* mklambda -- create a lambda */
 extern Tree *mklambda(Tree *params, Tree *body) {
 	return mk(nLambda, params, body);
