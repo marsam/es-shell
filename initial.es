@@ -82,7 +82,21 @@ fn-%read	= $&read
 #	eval runs its arguments by turning them into a code fragment
 #	(in string form) and running that fragment.
 
-fn eval { '{' ^ $^* ^ '}' }
+fn-eval = @ * { '{' ^ <={$&flatten ' ' $*} ^ '}' }
+
+# Fear abounds, defining fn this way, but here we go.  We define
+# a bootstrap fn-fn which can support initial.es, then at the end
+# of the file redefine fn-fn in a more robust way.
+# NOTE: this breaks (at least temporarily) `let (fn x y { z })`
+# kinds of statements, and shared closures among fns.
+
+fn-fn = @ name * {
+  if {~ $* () } {
+    fn-^$name =
+  } {
+    eval 'fn-'^$name^' = @ '^<={$&flatten ' ' $*}
+  }
+}
 
 #	Through version 0.84 of es, true and false were primitives,
 #	but, as many pointed out, they don't need to be.  These
@@ -317,7 +331,7 @@ fn vars {
 #		``ifs {cmd args}       <={%backquote <={%flatten '' ifs} {cmd args}}
 
 fn-%count	= $&count
-fn-%flatten	= $&flatten
+fn-%flatten     = $&flatten
 
 #	Note that $&backquote returns the status of the child process
 #	as the first value of its result list.  The default %backquote
@@ -750,6 +764,22 @@ max-eval-depth	= 640
 #	interpreter loop.
 
 noexport = noexport pid signals apid bqstatus fn-%dispatch path home
+
+# redefine fn in a way that supports closures.  This seems a little
+# horrifying, tbh.
+fn-fn = @ name * {
+  if {~ $#* 0} {
+    fn-$name =
+  } {
+    let (cl = ''; body = $^*; t = ) {
+      if {!~ <={t = <={~~ $^* *'%closure('*')'*}} ()} {
+        cl = 'let('^$t(2)^')'
+        body = $t(1)^' '^$t(3)
+      }
+      eval $cl^' '^fn-$name^' = @ '^$body
+    }
+  }
+}
 
 
 #
