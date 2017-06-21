@@ -256,6 +256,7 @@ top:
 		}
 		UNGETC(c);
 		buf[i] = '\0';
+        setskip();
 		y->str = gcdup(buf);
 		return QWORD;
 	case '\\':
@@ -319,6 +320,7 @@ top:
 		}
 		buf[1] = 0;
 		y->str = gcdup(buf);
+        setskip();
 		return QWORD;
 	case '#':
 		while ((c = GETC()) != '\n') /* skip comment until newline */

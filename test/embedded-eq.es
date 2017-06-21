@@ -1,19 +1,22 @@
 #! /usr/local/bin/es --
 
 fn t cmd-string want {
-  let (res = '') {
-    if {!{ret = <={./es -c 'eval '''^$^cmd-string^'''' > /tmp/es-test >[2] /tmp/es-err}}} {
-      echo '[31mfailed[0m:' $cmd-string '(error: '^`` \n {cat /tmp/es-err}^')'
+  let (res = ()
+       got = ()) {
+    # awful, but a requirement for test cases which may cause syntax errors.
+    if {!{res = <={subshell {eval $cmd-string} > /tmp/es-test >[2] /tmp/es-err}}} {
+      let (err-msg = ': '^`` \n {cat /tmp/es-err})
+        echo '[31mfailed[0m:' $cmd-string '(error '^$^res^$^err-msg^')'
       return
     } {
-      res = `{cat /tmp/es-test}
+      got = `{cat /tmp/es-test}
     }
-    if {~ $^want $^res} {
+    if {~ $^want $^got} {
       echo 'passed:' $cmd-string
     } {
       echo '[31mfailed[0m:' $cmd-string
       echo ' - want' $want
-      echo ' - got' $res
+      echo ' - got' $got
     }
   }
 }
@@ -32,3 +35,6 @@ t 'if {~ a a} {a=b; echo $a}' 'b'
 t '(a b)=(c=d d=e); echo $b $a' 'd=e c=d'
 t '!a=b c; echo $a' 'b c'
 t 'if {~ a=b a=b} {echo yes}' 'yes'
+t 'let (a=b=c=d) echo $a' 'b=c=d'
+t '''a=b'' = c=d; echo $''a=b''' 'c=d'
+t 'let (''a=b''=c=d) echo $''a=b''' 'c=d'
