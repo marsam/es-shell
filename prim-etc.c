@@ -1,6 +1,7 @@
 /* prim-etc.c -- miscellaneous primitives ($Revision: 1.2 $) */
 
 #define	REQUIRE_PWD	1
+#define ARITHMETIC_PRIMITIVES 1
 
 #include "es.h"
 #include "prim.h"
@@ -286,6 +287,40 @@ PRIM(resetterminal) {
 }
 #endif
 
+#if ARITHMETIC_PRIMITIVES
+PRIM(add) {
+    char *s;
+    long n, accum = 0;
+    Ref(List *, lp, list);
+    for (; lp != NULL; lp = lp->next) {
+        n = strtol(getstr(lp->term), &s, 0);
+        if (s != NULL && *s != '\0')
+            fail("$&add", "summands must be integers");
+        accum += n;
+    }
+    RefEnd(lp);
+    return mklist(mkstr(str("%d", accum)), NULL);
+}
+
+PRIM(negate) {
+    char *s;
+    long n;
+
+    if (list == NULL) {
+        return NULL;
+    }
+    Ref(List *, lp, list);
+    for (; lp != NULL; lp = lp->next) {
+        n = strtol(getstr(lp->term), &s, 0);
+        if (s != NULL && *s != '\0')
+            fail("$&negate", "negate arguments must be integers");
+        lp->term = mkstr(str("%d", -n));
+    }
+    RefEnd(lp);
+    return list;
+}
+#endif
+
 
 /*
  * initialization
@@ -317,6 +352,10 @@ extern Dict *initprims_etc(Dict *primdict) {
 	X(setmaxevaldepth);
 #if READLINE
 	X(resetterminal);
+#endif
+#if ARITHMETIC_PRIMITIVES
+    X(add);
+    X(negate);
 #endif
 	return primdict;
 }
